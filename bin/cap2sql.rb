@@ -2,6 +2,7 @@
 #
 require "rubygems"
 require 'rcapdissector'
+require 'fileutils'
 
 require File.dirname(__FILE__) + "/../lib/cap2sql"
 
@@ -12,10 +13,11 @@ end
 
 Db::connect
 
+FileUtils.mkdir_p('blobs')
 
 ARGV.each do |arg|
-    CapLoader::load_cap(arg)
+    CapLoader::load_cap(arg, 'blobs')
 end
 
-CapFile::deinitialize()
+CapDissector::CapFile::deinitialize()
 

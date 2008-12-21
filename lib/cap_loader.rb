@@ -1,32 +1,41 @@
 require 'rcapdissector'
 require 'date'
-
 class CapLoader
     private
 
-    def initialize(capfile_path)
+    def initialize(capfile_path, blobs_path)
         @capfile_path = capfile_path
+        @blobs_path = blobs_path
     end
 
     public
 
-    def CapLoader.load_cap(capfile_path)
-        loader = CapLoader.new(capfile_path)
+    def CapLoader.load_cap(capfile_path, blobs_path)
+        loader = CapLoader.new(capfile_path, blobs_path)
         loader.load()
     end
 
     def load()
         puts "Loading capture file #{@capfile_path}"
 
+        file = CapDissector::CapFile.new(@capfile_path)
+
         cf = Capfile.new()
         cf.filename = @capfile_path
         cf.save()
-        file = CapDissector::CapFile.new(@capfile_path)
 
         packet_count = 0
         print "Processing packets...\r"
         file.each_packet do |packet|
-            load_packet(cf, packet)
+            begin
+                load_packet(cf, packet)
+            rescue StandardError
+                raise #Passs ruby errors back on
+            rescue SignalError
+                raise #same here
+            rescue 
+                puts "Failed to load packet number #{packet.number} due to error #{$!.class}: #{$!}"
+            end
 
             packet_count += 1
             if (packet_count % 10 == 0) 
@@ -48,35 +57,51 @@ class CapLoader
         f.destination = packet.destination_address || "unknown"
         f.protocol = packet.protocol || "unknown"
         f.info = packet.info || "unknown"
+        f.capfile = capfile
         f.save
 
         load_packet_blobs(packet, f)
         load_packet_fields(packet, f)
         
-        f.save
     end
 
     def load_packet_blobs(packet, db_frame)
         packet.blobs.each_pair do |key, value|
-            db_frame.frame_blobs.create(
-                :name => value.name,
-                :value => value.value)
+            blob = db_frame.frame_blobs.create(
+                :name => value.name)
+
+            blob.save
+            blob.filename = "#{@blobs_path}/#{blob.id}"
+
+            File.open(blob.filename, "w") do |file|
+                file.binmode
+                file.write value.value
+            end
+
+            blob.save
         end
     end
 
     def load_packet_fields(packet, db_frame)
         ordinal = 0
+        fields_array = []
         packet.each_field do |field|
-            db_frame.frame_fields.create(
-                :name => field.name,
-                :display_name => field.display_name,
-                :display_value => field.display_value,
-                :raw_value => field.value,
-                :ordinal => ordinal)
+            fields_array << 
+                [
+                    field.name,
+                    field.display_name,
+                    field.display_value,
+                    field.value,
+                    ordinal,
+                    db_frame.id
+                ]
 
             ordinal += 1
         end
 
+        FrameField.import(
+            [ :name, :display_name, :display_value, :raw_value, :ordinal, :frame_id],
+            fields_array, :validate => false)
     end
 
 end

@@ -1,5 +1,10 @@
 require "rubygems"
 require "activerecord"
+require 'active_record/connection_adapters/mysql_adapter.rb'
+require 'ar-extensions'
+require 'ar-extensions/adapters/mysql'
+require 'ar-extensions/import/mysql'
+
 
 require File.dirname(__FILE__) + "/../conf/db"
 
@@ -33,13 +38,13 @@ class Db
                 t.string :name
                 t.string :display_name
                 t.string :display_value
-                t.binary :raw_value
+                t.binary :raw_value, :size => (100*1024*1024)
             end
 
             create_table :frame_blobs, :force => true do |t|
                 t.references :frame
                 t.string :name
-                t.binary :value
+                t.string :filename
             end
         end
     end
