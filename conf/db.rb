@@ -3,6 +3,6 @@ DB_CONNECTION_INFO = {
     :host => "localhost",
     :username => "root",
     :password => "spankme",
-    :database => "cap2sql"
+    :database => "cap2sql2"
 }
 
