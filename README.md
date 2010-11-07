@@ -1,7 +1,7 @@
 cap2sql is a simple Ruby script that uses rcapdissector to dissect a libpcap packet capture file and store the 
 results in a MySQL database.
 
-== Prerequisites ==
+# Prerequisites #
 
 You must have rcapdissector built and installed, which in turn means you must be able to build wireshark from source.
 There's some stuff on apocryph.org which covers how to do this.  Specifcally see http://apocryph.org/2008/12/01/building_rcapdissector_ubuntu_804/
@@ -15,18 +15,18 @@ You must also have a MySQL database created.  You'll also need the following gem
 
 Install each of those with 'sudo gem install x' where x is the gem name.
 
-== Database Setup ==
+# Database Setup #
 
 In the cap2sql directory is a 'conf' subdirectory which contains 'db.rb'.  Fill out the fields as appropriate.
 This is used to configure ActiveRecord, so the ActiveRecord docs regarding how to configure a database connection apply.
 
-== Creating the database schema ==
+# Creating the database schema #
 
 To create the cap2sql database schema, just run 'bin/create_db.rb'.  This will drop the tables if they exist, then create
 them.  Be aware of this property; whatever database is configured in `conf/db.rb` will be issued DROP and CREATE TABLE 
 commands for each of the cap2sql tables, so if you have any capture data that you want to keep, don't run create_db again.
 
-== Importing a capture file ==
+# Importing a capture file #
 
 To import one or more capture files, run `bin/cap2sql.rb`.  To import multiple capture files, specify each file on the command line.
 cap2sql.rb will create a 'blobs' folder under the current directory, where the raw blob data will be stored, one file per blob. 
@@ -35,7 +35,7 @@ cap2sql will output progress information to stdout, and will skip packets if the
 On my system it runs at about 50 packets per second, but that will depend greatly on the performance of your procoessor
 and the MySQL database.
 
-== Notes on the database schema ==
+# Notes on the database schema #
 
 The database schema is very simple.  The capfiles table contains one row for every capture file imported.  It associated
 a file name and a unique ID.
